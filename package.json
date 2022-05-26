@@ -1,17 +1,17 @@
 {
-  "name": "get-changed-files",
-  "description": "GitHub action that gets all changed files in a pull request or push.",
+  "name": "get-changed-packages",
+  "description": "GitHub action that gets packages with changed files in a pull request or push.",
   "version": "1.0.0",
   "private": true,
   "author": "Jitterbit, Inc.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiterbit/get-changed-files.git"
+    "url": "git+https://github.com/miserenkov/get-changed-packages.git"
   },
-  "homepage": "https://github.com/jitterbit/get-changed-files#readme",
+  "homepage": "https://github.com/miserenkov/get-changed-packages#readme",
   "bugs": {
-    "url": "https://github.com/jitterbit/get-changed-files/issues"
+    "url": "https://github.com/miserenkov/get-changed-packages/issues"
   },
   "keywords": [
     "GitHub",
@@ -22,7 +22,7 @@
     "Changed",
     "Modified",
     "Diff",
-    "Files"
+    "Folders"
   ],
   "main": "lib/main.js",
   "engines": {

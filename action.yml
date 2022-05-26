@@ -1,6 +1,6 @@
-name: Get All Changed Files
-description: Get all of the files changed/modified in a pull request or push's commits.
-author: Jitterbit, Inc.
+name: Get Changed Packages
+description: Get all of the packages with changed/modified files in a pull request or push's commits.
+author: Misha Serenkov | Jitterbit, Inc.
 branding:
   icon: file
   color: purple
@@ -14,32 +14,18 @@ inputs:
       Users shouldn't need to set this themselves.
     required: true
     default: ${{ github.token }}
+  packageFolders:
+    description: >
+      List of folders with packages.
+      Can be JSON string.
+    required: false
   format:
     description: >
       Format of the steps output context.
       Can be 'space-delimited', 'csv', or 'json'.
     required: true
-    default: space-delimited
+    default: json
 outputs:
-  all:
+  folders:
     description: >
-      Array of all changed files.
-  added:
-    description: >
-      Array of added files.
-  modified:
-    description: >
-      Array of modified files.
-  removed:
-    description: >
-      Array of removed files.
-  renamed:
-    description: >
-      Array of renamed files.
-  added_modified:
-    description: >
-      Array of all added and modified files.
-  # For backwards-compatibility
-  deleted:
-    description: >
-      Array of deleted files.
+      Array of paths to changed packages.

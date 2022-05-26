@@ -2,13 +2,21 @@ import * as core from '@actions/core'
 import {context, GitHub} from '@actions/github'
 
 type Format = 'space-delimited' | 'csv' | 'json'
-type FileStatus = 'added' | 'modified' | 'removed' | 'renamed'
 
 async function run(): Promise<void> {
   try {
     // Create GitHub client with the API token.
     const client = new GitHub(core.getInput('token', {required: true}))
     const format = core.getInput('format', {required: true}) as Format
+    const packageFoldersRaw = core.getInput('packageFolders', {required: true})
+    let packageFolders: string[] = []
+    if (packageFoldersRaw && packageFoldersRaw.length) {
+      packageFolders = JSON.parse(packageFoldersRaw) as string[]
+    }
+
+    if (packageFolders.length < 1) {
+      core.setFailed('Package folders is required')
+    }
 
     // Ensure that the format parameter is set properly.
     if (format !== 'space-delimited' && format !== 'csv' && format !== 'json') {
@@ -84,12 +92,7 @@ async function run(): Promise<void> {
 
     // Get the changed files from the response payload.
     const files = response.data.files
-    const all = [] as string[],
-      added = [] as string[],
-      modified = [] as string[],
-      removed = [] as string[],
-      renamed = [] as string[],
-      addedModified = [] as string[]
+    const changedPackages = [] as string[]
     for (const file of files) {
       const filename = file.filename
       // If we're using the 'space-delimited' format and any of the filenames have a space in them,
@@ -100,88 +103,46 @@ async function run(): Promise<void> {
             "Please submit an issue on this action's GitHub repo."
         )
       }
-      all.push(filename)
-      switch (file.status as FileStatus) {
-        case 'added':
-          added.push(filename)
-          addedModified.push(filename)
-          break
-        case 'modified':
-          modified.push(filename)
-          addedModified.push(filename)
-          break
-        case 'removed':
-          removed.push(filename)
-          break
-        case 'renamed':
-          renamed.push(filename)
-          break
-        default:
-          core.setFailed(
-            `One of your files includes an unsupported file status '${file.status}', expected 'added', 'modified', 'removed', or 'renamed'.`
-          )
+
+      const filenameParts = filename.split('/')
+      if (!packageFolders.includes(filenameParts[0])) {
+        continue
       }
+
+      const packagePath = filenameParts.slice(0, 2).join('/')
+      if (changedPackages.includes(packagePath)) {
+        continue
+      }
+
+      changedPackages.push(packagePath)
     }
 
     // Format the arrays of changed files.
-    let allFormatted: string,
-      addedFormatted: string,
-      modifiedFormatted: string,
-      removedFormatted: string,
-      renamedFormatted: string,
-      addedModifiedFormatted: string
+    let formatted: string
     switch (format) {
       case 'space-delimited':
         // If any of the filenames have a space in them, then fail the step.
-        for (const file of all) {
-          if (file.includes(' '))
+        for (const path of changedPackages) {
+          if (path.includes(' '))
             core.setFailed(
               `One of your files includes a space. Consider using a different output format or removing spaces from your filenames.`
             )
         }
-        allFormatted = all.join(' ')
-        addedFormatted = added.join(' ')
-        modifiedFormatted = modified.join(' ')
-        removedFormatted = removed.join(' ')
-        renamedFormatted = renamed.join(' ')
-        addedModifiedFormatted = addedModified.join(' ')
+        formatted = changedPackages.join(' ')
         break
       case 'csv':
-        allFormatted = all.join(',')
-        addedFormatted = added.join(',')
-        modifiedFormatted = modified.join(',')
-        removedFormatted = removed.join(',')
-        renamedFormatted = renamed.join(',')
-        addedModifiedFormatted = addedModified.join(',')
+        formatted = changedPackages.join(',')
         break
       case 'json':
-        allFormatted = JSON.stringify(all)
-        addedFormatted = JSON.stringify(added)
-        modifiedFormatted = JSON.stringify(modified)
-        removedFormatted = JSON.stringify(removed)
-        renamedFormatted = JSON.stringify(renamed)
-        addedModifiedFormatted = JSON.stringify(addedModified)
+        formatted = JSON.stringify(changedPackages)
         break
     }
 
     // Log the output values.
-    core.info(`All: ${allFormatted}`)
-    core.info(`Added: ${addedFormatted}`)
-    core.info(`Modified: ${modifiedFormatted}`)
-    core.info(`Removed: ${removedFormatted}`)
-    core.info(`Renamed: ${renamedFormatted}`)
-    core.info(`Added or modified: ${addedModifiedFormatted}`)
+    core.info(`Folders: ${formatted}`)
 
     // Set step output context.
-    core.setOutput('all', allFormatted)
-    core.setOutput('added', addedFormatted)
-    core.setOutput('modified', modifiedFormatted)
-    core.setOutput('removed', removedFormatted)
-    core.setOutput('renamed', renamedFormatted)
-    core.setOutput('added_modified', addedModifiedFormatted)
-
-    // For backwards-compatibility
-    core.setOutput('deleted', removedFormatted)
+    core.setOutput('folders', formatted)
   } catch (error) {
     core.setFailed(error.message)
   }
