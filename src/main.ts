@@ -95,6 +95,11 @@ async function run(): Promise<void> {
     const changedPackages = [] as string[]
     for (const file of files) {
       const filename = file.filename
+
+      if (file.status === 'removed') {
+        continue
+      }
+
       // If we're using the 'space-delimited' format and any of the filenames have a space in them,
       // then fail the step.
       if (format === 'space-delimited' && filename.includes(' ')) {
