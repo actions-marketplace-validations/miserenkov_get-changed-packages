@@ -1,4 +1,4 @@
-name: Get Changed Packages
+name: Get Changed Packages in folders
 description: Get all of the packages with changed/modified files in a pull request or push's commits.
 author: Misha Serenkov | Jitterbit, Inc.
 branding:
